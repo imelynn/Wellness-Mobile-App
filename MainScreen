@@ -1,0 +1,58 @@
+package com.intuitivelifestyle.applogin
+
+import android.os.Bundle
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doOnTextChanged
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import com.google.android.material.textfield.TextInputLayout
+
+
+class MainActivity : AppCompatActivity() {
+
+    private val emailLiveData = MutableLiveData<String>()
+    private val passwordLiveData = MutableLiveData<String>()
+    private val isValidLiveData = MediatorLiveData<Boolean>().apply {
+        this.value = false
+
+        addSource(emailLiveData) { email ->
+            val password = passwordLiveData.value
+            this.value = validateForm(email, password)
+
+        }
+        addSource(passwordLiveData) {password ->
+            val email = emailLiveData.value
+            this.value = validateForm(email, password)
+        }
+    }
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            setContentView(R.layout.activity_main)
+
+            var emailLayout = this.findViewById<TextInputLayout>(R.id.email_layout)
+            var passwordLayout = this.findViewById<TextInputLayout>(R.id.password_layout)
+            var signInButton = findViewById<Button>(R.id.sign_in_button)
+
+            emailLayout.editText?.doOnTextChanged { text, _, _, _ ->
+                emailLiveData.value = text?.toString()
+            }
+            passwordLayout.editText?.doOnTextChanged { text, _, _, _ ->
+                emailLiveData.value = text?.toString()
+            }
+
+            isValidLiveData.observe(this) { isValid ->
+                signInButton.isEnabled = isValid
+            }
+        }
+    private fun validateForm(email: String?, password: String?) : Boolean {
+        val isValidEmail = email != null && email.isNotBlank() && email.contains("@")
+        val isValidPassword = password != null && password.isNotBlank() && password.length >= 6
+        return isValidEmail && isValidPassword
+    }
+    }
+
+
+
+
+
